@@ -1,0 +1,133 @@
+#include <Servo.h>
+#include <LiquidCrystal.h>
+#include <Wire.h>
+LiquidCrystal lcd(12, 11, 13, 8, 2, 4);
+ const int pingPin = 7; // Trigger Pin of Ultrasonic Senor
+ const int echoPin = 6; // Echo Pin of Ultrasonic Sensor
+ const int buzzer = 3;
+int force=0;
+int Smokevalue;
+int temp;
+Servo myservo1;
+Servo myservo2;
+//const int servoPin = A0;
+//const int 
+void setup()
+{ lcd.begin(16, 2);
+  
+   pinMode(A1, INPUT);
+   pinMode(A0, INPUT);
+  pinMode(A2, INPUT);
+	Wire.begin(4);
+	Wire.onReceive(receiveEvent);
+    int count1 = 1;
+    int count2 = 2;
+	Serial.begin(9600);
+    myservo1.attach(9);
+    myservo2.attach(10);
+  	myservo1.write(0);
+    myservo2.write(0);
+   pinMode(buzzer,OUTPUT);  
+
+}
+
+ void loop() {
+     lcd.clear();
+   
+ 
+ //Temparature Sensor Part
+     temp=analogRead(A1);
+  
+   temp=map(temp,20,358,-20,255);
+  Serial.println(temp);
+   
+    lcd.setCursor(0, 0);
+     lcd.print("temp : ");
+     lcd.print(temp);
+     lcd.print(" degrees");
+    
+   // smoke sensor
+    Smokevalue = analogRead(A2);
+   if(Smokevalue>200){
+      digitalWrite(buzzer,HIGH);
+     lcd.setCursor(0,1);
+     lcd.print("Fire Detected");
+     myservo1.write(180);
+     myservo2.write(180);
+   }
+   else{
+   myservo1.write(0);
+     myservo2.write(0);
+   }
+   
+   //weight part
+   force = analogRead(A0);
+  if(force>200){
+  lcd.setCursor(0,0);
+     digitalWrite(buzzer,HIGH);
+    lcd.clear();
+    lcd.print("Car Overweight");
+     
+  }
+ else{ digitalWrite(buzzer,LOW);}
+   
+   
+   
+   delay(100);
+ long duration, inches, cm;
+ pinMode(pingPin, OUTPUT);
+ digitalWrite(pingPin, LOW);
+ delayMicroseconds(2);
+ digitalWrite(pingPin, HIGH);
+ delayMicroseconds(10);
+ digitalWrite(pingPin, LOW);
+ pinMode(echoPin, INPUT);
+ duration = pulseIn(echoPin, HIGH);
+ inches = microsecondsToInches(duration);
+ cm = microsecondsToCentimeters(duration);
+   
+   if(cm < 40){
+     // some one is near  car so stop car
+     Serial.write(0);
+     digitalWrite(buzzer,HIGH);
+     
+   }
+   else{
+     // no one is near car thus can can start
+     Serial.write(1);
+    digitalWrite(buzzer,LOW); 
+   }
+ Serial.print(inches);
+ Serial.print("in, ");
+ Serial.print(cm);
+ Serial.print("cm");
+ Serial.println(); delay(100); }
+ long microsecondsToInches(long microseconds) {
+ return microseconds / 74 / 2; }
+ long microsecondsToCentimeters(long microseconds) {
+ return microseconds / 29 / 2;
+ 
+
+      //count1++;
+      //else if(count2%2==0)
+        //myservo2.write(0);
+      //count2++;
+        
+ }
+void receiveEvent(int howMany)
+{
+	int x = Wire.read();
+  Serial.print("////////xc///");
+  
+	Serial.println(x);
+	if (x==247)
+	{
+		myservo1.write(180);
+     
+	}
+	else if(x == 119)
+	{
+		myservo2.write(180);
+      
+	}
+}

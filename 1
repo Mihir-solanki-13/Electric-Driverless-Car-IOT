@@ -1,0 +1,53 @@
+#include <Wire.h>
+
+#include <IRremote.h>
+
+const int RECV_PIN = 7;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+int value;
+const int headlight1 = 5;
+const int headlight2 = 4;
+ int lightintensity;
+
+void setup()
+{
+   
+  pinMode(headlight1, OUTPUT);
+  pinMode(headlight2, OUTPUT);
+  pinMode(A0, INPUT);
+ 
+    
+  Wire.begin();
+  Serial.begin(9600);
+  irrecv.enableIRIn();
+}
+
+void loop()
+{
+   
+  //HeadLight Part
+  lightintensity = analogRead(A0);
+   lightintensity = map( lightintensity, 0,1023,0,255);
+   if(lightintensity<150){
+ digitalWrite(headlight2,HIGH);
+  
+     digitalWrite(headlight1, HIGH);}
+   else{
+   digitalWrite(headlight2,LOW);
+  
+     digitalWrite(headlight1, LOW);
+   }
+   if(irrecv.decode(&results))
+     {
+       value = results.value;
+       Serial.println(value);
+       irrecv.resume();
+     }
+   
+  Wire.beginTransmission(4);
+  Wire.write(value);
+  Wire.endTransmission();
+  delay(500);
+  
+}
